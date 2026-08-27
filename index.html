@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guandan — Pass & Play (Heart Wildcard)</title>
+<style>
+  :root{
+    --bg:#07170f;
+    --panel:#10271d;
+    --panel2:#153526;
+    --accent:#f2c14e;
+    --text:#f6f8f7;
+    --muted:#a8b9af;
+    --red:#e85757;
+    --green:#46b978;
+    --blue:#58a6ff;
+    --card:#fffdf7;
+    --ink:#182018;
+    --border:rgba(255,255,255,.12);
+    --shadow:0 14px 35px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(70,185,120,.16), transparent 30%),
+      radial-gradient(circle at 80% 0%, rgba(242,193,78,.08), transparent 25%),
+      var(--bg);
+    color:var(--text);
+  }
+  button,input{font:inherit}
+  button{cursor:pointer}
+  .app{max-width:1280px;margin:auto;padding:18px}
+  .topbar{
+    display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+    background:rgba(16,39,29,.92);border:1px solid var(--border);border-radius:18px;
+    padding:14px 16px;box-shadow:var(--shadow);position:sticky;top:8px;z-index:20;
+    backdrop-filter:blur(9px)
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+    background:linear-gradient(145deg,#f2c14e,#da982c);color:#132016;font-size:24px;font-weight:900
+  }
+  h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted)}
+  .scores{display:flex;gap:8px;flex-wrap:wrap}
+  .scorebox{padding:8px 12px;border-radius:12px;background:#0c2117;border:1px solid var(--border);min-width:120px}
+  .scorebox strong{font-size:18px}.teamA{color:#f3d16f}.teamB{color:#8dc5ff}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{
+    border:1px solid var(--border);background:#173827;color:white;border-radius:11px;
+    padding:9px 13px;font-weight:700;transition:.15s
+  }
+  .btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn.primary{background:var(--accent);color:#182018;border-color:#e6b537}
+  .btn.danger{background:#7d2929}.btn.blue{background:#244d77}.btn.ghost{background:transparent}
+  .layout{display:grid;grid-template-columns:270px 1fr;gap:16px;margin-top:16px}
+  .panel{background:rgba(16,39,29,.93);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}
+  .sidebar{padding:14px}
+  .player{
+    border:1px solid var(--border);border-radius:14px;padding:11px;margin-bottom:9px;background:#0c2117;
+  }
+  .player.active{outline:2px solid var(--accent);background:#173827}
+  .player.finished{opacity:.6}
+  .player-row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .player-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge{font-size:11px;padding:3px 7px;border-radius:999px;background:#254b37;color:#d5e9de}
+  .status{font-size:12px;color:var(--muted);margin-top:4px}
+  .main{padding:16px;min-height:650px}
+  .roundbar{
+    display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
+    padding-bottom:12px;border-bottom:1px solid var(--border)
+  }
+  .roundinfo strong{color:var(--accent)}
+  .table{
+    margin-top:15px;min-height:210px;border-radius:18px;
+    background:
+      radial-gradient(circle at center, rgba(255,255,255,.06), transparent 45%),
+      linear-gradient(160deg,#0d482b,#08351f);
+    border:1px solid rgba(255,255,255,.10);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;padding:18px;text-align:center;
+  }
+  .table-title{color:#cfe3d7;font-size:13px;margin-bottom:10px}
+  .played-cards,.hand{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+  .card{
+    width:62px;height:88px;border-radius:9px;background:var(--card);color:var(--ink);
+    border:2px solid #e7e0d0;box-shadow:0 5px 12px rgba(0,0,0,.25);
+    display:flex;flex-direction:column;justify-content:space-between;padding:6px;
+    user-select:none;position:relative;transition:.12s;font-weight:800;
+  }
+  .card.small{width:52px;height:74px;font-size:13px}
+  .card.red{color:#c62f2f}.card.black{color:#171c18}.card.joker{font-size:12px;letter-spacing:-.4px}
+  .card.selected{transform:translateY(-14px);outline:3px solid var(--accent);box-shadow:0 10px 20px rgba(242,193,78,.24)}
+  .card:hover{transform:translateY(-5px)}
+  .card.selected:hover{transform:translateY(-14px)}
+  .corner{line-height:1}.suit{font-size:23px;text-align:center}.deckmark{font-size:9px;color:#7a7a7a;text-align:right}
+  .hand-wrap{margin-top:18px}
+  .hand-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+  .hand-title{font-size:18px;font-weight:900}
+  .hand{justify-content:flex-start;align-items:flex-end;min-height:112px;padding:14px 4px 3px}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+  .hint{font-size:12px;color:var(--muted);margin-top:9px;min-height:18px}
+  .good{color:#81dfa9}.bad{color:#ff9292}.gold{color:var(--accent)}
+  .overlay{
+    position:fixed;inset:0;background:#031009;z-index:100;display:none;
+    align-items:center;justify-content:center;padding:20px
+  }
+  .overlay.show{display:flex}
+  body.privacy-mode .app{
+    visibility:hidden;
+  }
+  body.privacy-mode .overlay.show{
+    visibility:visible;
+  }
+
+  .modal{
+    width:min(560px,100%);background:#10271d;border:1px solid var(--border);border-radius:22px;
+    padding:24px;box-shadow:0 30px 70px rgba(0,0,0,.55);text-align:center
+  }
+  .modal h2{margin-top:0;font-size:26px}.modal p{color:#c4d2ca;line-height:1.5}
+  .namegrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin:18px 0}
+  .namegrid label{font-size:12px;color:var(--muted)}
+  .namegrid input{width:100%;margin-top:5px;background:#0a1c13;color:#fff;border:1px solid var(--border);border-radius:10px;padding:10px}
+  .rules{font-size:12px;color:#b9c9bf;line-height:1.55;text-align:left;background:#0a1c13;padding:12px;border-radius:12px;margin-top:12px;max-height:180px;overflow:auto}
+  .vote-list{display:grid;gap:8px;margin:15px 0}
+  .vote{padding:10px;border-radius:10px;background:#0a1c13;display:flex;justify-content:space-between}
+  .footer-note{margin-top:14px;color:#809488;font-size:11px}
+  .reorder-controls{display:flex;gap:4px;justify-content:center;margin-top:4px}
+  .movebtn{
+    border:1px solid #d6d0c3;background:#f5f0e6;color:#263229;border-radius:5px;
+    padding:1px 5px;font-size:11px;font-weight:900;line-height:1.2
+  }
+  .movebtn:hover{filter:brightness(.94)}
+  .card-slot{display:flex;flex-direction:column;align-items:center}
+
+  @media(max-width:850px){
+    .layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .player{margin:0}.card{width:52px;height:76px}.main{min-height:auto}
+  }
+  @media(max-width:520px){
+    .app{padding:8px}.topbar{top:3px}.namegrid{grid-template-columns:1fr}
+    .sidebar{grid-template-columns:1fr 1fr}.card{width:45px;height:68px;padding:4px;font-size:12px}.suit{font-size:18px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">掼</div>
+      <div><h1>Guandan · Pass & Play</h1><div class="sub">Four players · two teams · one device</div></div>
+    </div>
+    <div class="scores">
+      <div class="scorebox"><div class="sub">Team A · Players 1 & 3</div><strong class="teamA" id="scoreA">0</strong> pts · Level <span id="levelA">2</span></div>
+      <div class="scorebox"><div class="sub">Team B · Players 2 & 4</div><strong class="teamB" id="scoreB">0</strong> pts · Level <span id="levelB">2</span></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn ghost" onclick="openNames()">Player Names</button>
+      <button class="btn ghost" onclick="openRules()">Rules</button>
+      <button class="btn danger" onclick="beginEndVote()">End Game</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel sidebar" id="playersPanel"></div>
+    <div class="panel main">
+      <div class="roundbar">
+        <div class="roundinfo">
+          Round <strong id="roundNo">1</strong> · Level card: <strong id="levelCard">2</strong>
+          <span class="sub"> (current leading team's level)</span>
+        </div>
+        <div class="sub" id="turnStatus">Waiting to start</div>
+      </div>
+
+      <div class="table">
+        <div class="table-title" id="tableTitle">No cards on table</div>
+        <div class="played-cards" id="tableCards"></div>
+        <div class="hint" id="trickHint">Lead any supported combination.</div>
+      </div>
+
+      <div class="hand-wrap">
+        <div class="hand-head">
+          <div class="hand-title" id="handTitle">Player's hand</div>
+          <div class="sub"><span id="handCount">0</span> cards remaining</div>
+        </div>
+        <div class="hand" id="hand"></div>
+        <div class="actions">
+          <button class="btn primary" id="playBtn" onclick="playSelected()">Play Selected</button>
+          <button class="btn blue" id="passBtn" onclick="passTurn()">Pass</button>
+          <button class="btn" onclick="sortHand()">Sort Hand</button>
+          <button class="btn" id="reorderBtn" onclick="toggleReorderMode()">Reorder Cards</button>
+        </div>
+        <div class="hint" id="selectionHint">Select cards to play.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay show" id="startOverlay">
+  <div class="modal">
+    <h2>Guandan 掼蛋</h2>
+    <p>Set player names, then deal two decks among four players. Partners sit opposite each other: Players 1 & 3 versus Players 2 & 4.</p>
+    <div class="namegrid" id="startNames"></div>
+    <button class="btn primary" style="width:100%" onclick="startGame()">Deal & Start Game</button>
+    <div class="rules">
+      <b>This standalone edition supports the core hot-seat game flow and common Guandan combinations:</b>
+      single, pair, triple, triple+pair, 5-card straight, 3 consecutive pairs, 2 consecutive triples, four-or-more-card bombs, straight flush, and four-joker bomb.<br><br>
+      Two decks are used and shuffled with the browser's cryptographically secure random generator. Jokers are highest. The ♥ card of the current level rank is a wildcard (逢人配) for supported combinations. Bombs beat ordinary combinations; straight flush beats normal bombs below six cards; larger bombs outrank smaller bombs. The current level rank is treated as a high rank for ordinary comparisons.
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="passOverlay">
+  <div class="modal">
+    <div class="sub">PASS THE DEVICE</div>
+    <h2 id="passToName">Next Player</h2>
+    <p>The previous player's hand is hidden. Give the device to the named player, then tap below when ready.</p>
+    <button class="btn primary" style="width:100%" onclick="revealNext()">I am ready — show my hand</button>
+  </div>
+</div>
+
+<div class="overlay" id="namesOverlay">
+  <div class="modal">
+    <h2>Player Names</h2>
+    <div class="namegrid" id="nameInputs"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" style="flex:1" onclick="saveNames()">Save Names</button>
+      <button class="btn" onclick="closeOverlay('namesOverlay')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="rulesOverlay">
+  <div class="modal">
+    <h2>Game Guide</h2>
+    <div class="rules" style="max-height:55vh">
+      <b>Teams:</b> Players 1 & 3 are Team A. Players 2 & 4 are Team B.<br><br>
+      <b>Goal:</b> Empty your hand. A round ends when three players have gone out; the remaining player is fourth.<br><br>
+      <b>Tricks:</b> The leader plays a combination. Other players either play the same type with a higher value, use a bomb, or pass. After everyone else passes, the last player who played starts a new trick.<br><br><b>Play confirmation:</b> After selecting cards and pressing Play Selected, the game shows the proposed cards and combination. Nothing is played until Confirm Play is pressed.<br><br><b>Pass confirmation:</b> Pass also requires confirmation before the turn changes.<br><br><b>Hand privacy:</b> Opponents' remaining card counts stay hidden until they have 10 or fewer cards.<br><br><b>Hand ordering:</b> Use Reorder Cards and the arrow buttons to arrange cards manually. Sort Hand restores automatic rank sorting.<br><br><b>Finished-player lead:</b> if a player has already finished and everyone passes on that player's winning play, that player's teammate leads the next trick when still active.<br><br>
+      <b>Supported combinations:</b> singles, pairs, triples, triple + pair, 5-card straights, three consecutive pairs, two consecutive triples, bombs of 4+ same-rank cards, 5-card straight flushes, and the four-joker bomb.<br><br>
+      <b>Round scoring used in this edition:</b> if partners finish 1st & 2nd, +3 level points; 1st & 3rd, +2; 1st & 4th, +1. The winning team advances that many levels. Score counter also records these points.<br><br>
+      <b>Tribute and opening lead:</b> From the second hand onward, the opening lead is determined by the previous result. After a 1st+2nd finish, 4th place tributes 1st and 3rd place tributes 2nd; the player who paid the higher-ranked tribute leads the next hand. If those two tribute cards are equal in rank, the game randomly chooses which of the two tribute payers leads. After a 1st+3rd finish, only 4th place tributes 1st, and that tribute payer leads. After a 1st+4th finish, there is no tribute and the previous 1st-place player leads. The first hand of a new game starts with a random player. Tribute cards are transferred automatically, and the recipient returns a card ranked 10 or below when available. Each exchange is handled privately on the pass-and-play screen.<br><br>
+      <b>Level cards:</b> the round's level rank is the higher/current leading team's level. Level cards rank above Ace for ordinary same-type comparisons. The ♥ card matching the current level rank is a wildcard (逢人配) and may substitute for any ordinary suited card in supported combinations; it cannot become a joker. Regional Guandan rules vary; this edition uses the tribute/return-tribute convention described above.
+    </div>
+    <button class="btn primary" style="margin-top:12px;width:100%" onclick="closeOverlay('rulesOverlay')">Close</button>
+  </div>
+</div>
+
+
+
+<div class="overlay" id="confirmPassOverlay">
+  <div class="modal">
+    <div class="sub">CONFIRM PASS</div>
+    <h2>Pass this turn?</h2>
+    <p>You have not played any cards. Confirm that you want to pass.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn primary" style="flex:1;min-width:170px" onclick="confirmPassTurn()">Confirm Pass</button>
+      <button class="btn" style="flex:1;min-width:140px" onclick="cancelPassTurn()">Go Back</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmPlayOverlay">
+  <div class="modal">
+    <div class="sub">CONFIRM YOUR PLAY</div>
+    <h2 id="confirmPlayTitle">Play these cards?</h2>
+    <p id="confirmPlayCombo"></p>
+    <div class="played-cards" id="confirmPlayCards" style="margin:18px 0 24px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn primary" style="flex:1;min-width:180px" onclick="confirmSelectedPlay()">Confirm Play</button>
+      <button class="btn" style="flex:1;min-width:140px" onclick="cancelSelectedPlay()">Go Back</button>
+    </div>
+    <div class="footer-note">Cards are not placed on the table until you confirm.</div>
+  </div>
+</div>
+
+
+<div class="overlay" id="tributeOverlay">
+  <div class="modal">
+    <div class="sub" id="tributeStepLabel">TRIBUTE</div>
+    <h2 id="tributeTitle">Tribute Phase</h2>
+    <p id="tributeInstruction"></p>
+    <div class="hand" id="tributeHand" style="justify-content:center;max-height:310px;overflow:auto;padding-top:20px"></div>
+    <div class="hint" id="tributeHint"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <button class="btn primary" id="tributeConfirmBtn" style="flex:1;min-width:180px" onclick="confirmTributeSelection()">Confirm</button>
+      <button class="btn" id="tributeSkipBtn" style="display:none" onclick="skipTribute()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="voteOverlay">
+  <div class="modal">
+    <h2>Unanimous End-Game Vote</h2>
+    <p>All four players must agree. Each player votes privately, one at a time.</p>
+    <div id="voteArea"></div>
+  </div>
+</div>
+
+<script>
+const SUITS = ['♠','♥','♣','♦'];
+const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const LEVELS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const state = {
+  players:[
+    {name:'Player 1', team:'A', hand:[], finished:false, place:null},
+    {name:'Player 2', team:'B', hand:[], finished:false, place:null},
+    {name:'Player 3', team:'A', hand:[], finished:false, place:null},
+    {name:'Player 4', team:'B', hand:[], finished:false, place:null}
+  ],
+  current:0, round:1, scoreA:0, scoreB:0, levelA:0, levelB:0,
+  tablePlay:null, lastPlayPlayer:null, passes:0, selected:new Set(), finishOrder:[],
+  started:false, hidden:false, endVotes:[], voteIndex:0, pendingPlay:null,
+  pendingNextRound:false, tributeQueue:[], tributeIndex:0, tributeContext:null,
+  tributeRecords:[], previousFinishOrder:[], pendingPass:false, reorderMode:false
+};
+
+function makeDeck(){
+  let deck=[], id=0;
+  for(let d=1; d<=2; d++){
+    for(const s of SUITS) for(const r of RANKS) deck.push({id:id++, rank:r, suit:s, deck:d, joker:false});
+    deck.push({id:id++, rank:'SJ', suit:'🃏', deck:d, joker:true, jokerType:'small'});
+    deck.push({id:id++, rank:'BJ', suit:'🃏', deck:d, joker:true, jokerType:'big'});
+  }
+  return deck;
+}
+function secureRandomInt(maxExclusive){
+  if(!Number.isInteger(maxExclusive) || maxExclusive <= 0){
+    throw new Error('maxExclusive must be a positive integer');
+  }
+
+  // Rejection sampling avoids modulo bias.
+  const range = 0x100000000; // 2^32
+  const limit = range - (range % maxExclusive);
+  const values = new Uint32Array(1);
+
+  do {
+    crypto.getRandomValues(values);
+  } while(values[0] >= limit);
+
+  return values[0] % maxExclusive;
+}
+
+function shuffle(a){
+  // Cryptographically secure Fisher-Yates shuffle.
+  for(let i=a.length-1;i>0;i--){
+    const j=secureRandomInt(i+1);
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function currentLevelIndex(){ return Math.max(state.levelA,state.levelB); }
+function currentLevelRank(){ return LEVELS[currentLevelIndex()]; }
+
+function baseRankValue(card){
+  if(card.rank==='SJ') return 16;
+  if(card.rank==='BJ') return 17;
+  const base=RANKS.indexOf(card.rank)+2;
+  if(card.rank===currentLevelRank()) return 15;
+  return base;
+}
+function naturalValue(card){
+  if(card.rank==='SJ') return 16;
+  if(card.rank==='BJ') return 17;
+  return RANKS.indexOf(card.rank)+2;
+}
+function sortCards(cards){
+  cards.sort((a,b)=>baseRankValue(a)-baseRankValue(b) || SUITS.indexOf(a.suit)-SUITS.indexOf(b.suit));
+}
+function cardHtml(c, small=false){
+  const red=(c.suit==='♥'||c.suit==='♦'||c.rank==='BJ');
+  const cls=`card ${small?'small ':''}${red?'red':'black'} ${c.joker?'joker':''}`;
+  if(c.joker){
+    return `<div class="${cls}" data-id="${c.id}"><div class="corner">${c.rank}</div><div class="suit">🃏</div><div class="deckmark">Deck ${c.deck}</div></div>`;
+  }
+  return `<div class="${cls}" data-id="${c.id}"><div class="corner">${c.rank}<br>${c.suit}</div><div class="suit">${c.suit}</div><div class="deckmark">Deck ${c.deck}</div></div>`;
+}
+
+function countsByRank(cards){
+  const m={}; for(const c of cards) (m[c.rank]??=[]).push(c); return m;
+}
+function isConsecutive(vals){
+  const v=[...new Set(vals)].sort((a,b)=>a-b);
+  if(v.length!==vals.length) return false;
+  for(let i=1;i<v.length;i++) if(v[i]!==v[i-1]+1) return false;
+  return true;
+}
+function isHeartLevelWildcard(card){
+  return !card.joker && card.suit==='♥' && card.rank===currentLevelRank();
+}
+
+// Classify a set assuming every card has a fixed identity.
+function classifyFixed(cards){
+  const n=cards.length;
+  if(!n) return null;
+  const counts=countsByRank(cards);
+  const entries=Object.entries(counts);
+  const countPattern=entries.map(([,v])=>v.length).sort((a,b)=>b-a);
+  const maxv=Math.max(...cards.map(baseRankValue));
+
+  if(n===1) return {type:'single', size:1, value:maxv, label:'Single'};
+  if(n===2 && entries.length===1) return {type:'pair', size:2, value:maxv, label:'Pair'};
+  if(n===3 && entries.length===1) return {type:'triple', size:3, value:maxv, label:'Triple'};
+  if(n===5 && countPattern[0]===3 && countPattern[1]===2){
+    const tripleRank=entries.find(([,v])=>v.length===3)[1][0];
+    return {type:'triplePair', size:5, value:baseRankValue(tripleRank), label:'Triple + Pair'};
+  }
+
+  // Four actual jokers only. Wildcards may NOT become jokers.
+  if(n===4 && cards.every(c=>c.joker))
+    return {type:'jokerBomb', size:4, value:999, bomb:true, label:'Four-Joker Bomb'};
+
+  // Same-rank bomb, 4+.
+  if(n>=4 && entries.length===1)
+    return {type:'bomb', size:n, value:maxv, bomb:true, label:`${n}-Card Bomb`};
+
+  // Straight flush: exactly 5 fixed cards, one suit, natural consecutive ranks.
+  if(n===5 && cards.every(c=>!c.joker) && cards.every(c=>c.suit===cards[0].suit)){
+    const vals=cards.map(naturalValue).sort((a,b)=>a-b);
+    if(isConsecutive(vals) && Math.max(...vals)<=14)
+      return {type:'straightFlush', size:5, value:Math.max(...vals), bomb:true, label:'Straight Flush'};
+  }
+
+  // Straight: exactly 5, no jokers.
+  if(n===5 && cards.every(c=>!c.joker)){
+    const vals=cards.map(naturalValue).sort((a,b)=>a-b);
+    if(isConsecutive(vals) && Math.max(...vals)<=14)
+      return {type:'straight', size:5, value:Math.max(...vals), label:'Straight'};
+  }
+
+  // Three consecutive pairs.
+  if(n===6 && entries.length===3 && entries.every(([,v])=>v.length===2) && cards.every(c=>!c.joker)){
+    const vals=entries.map(([,v])=>naturalValue(v[0])).sort((a,b)=>a-b);
+    if(isConsecutive(vals) && Math.max(...vals)<=14)
+      return {type:'threePairs', size:6, value:Math.max(...vals), label:'Three Consecutive Pairs'};
+  }
+
+  // Two consecutive triples.
+  if(n===6 && entries.length===2 && entries.every(([,v])=>v.length===3) && cards.every(c=>!c.joker)){
+    const vals=entries.map(([,v])=>naturalValue(v[0])).sort((a,b)=>a-b);
+    if(isConsecutive(vals) && Math.max(...vals)<=14)
+      return {type:'twoTriples', size:6, value:Math.max(...vals), label:'Two Consecutive Triples'};
+  }
+  return null;
+}
+
+function comboKey(c){
+  return `${c.type}|${c.size}|${c.value}|${c.bomb?1:0}`;
+}
+
+function comboPriority(c){
+  // Used only when the same selected cards can legally represent several things.
+  if(c.type==='jokerBomb') return 100000;
+  if(c.type==='bomb') return 90000 + c.size*100 + c.value;
+  if(c.type==='straightFlush') return 85000 + c.value;
+  const p={twoTriples:7000,threePairs:6500,triplePair:6000,straight:5500,triple:3000,pair:2000,single:1000};
+  return (p[c.type]||0)+c.value;
+}
+
+// Generate all legal interpretations of ♥ level cards ("逢人配").
+// There are at most two such cards in the two-deck game, so exhaustive
+// substitution is small enough for instant local play.
+function classifyCandidates(cards){
+  const candidates=[];
+  const seen=new Set();
+
+  function add(combo){
+    if(!combo) return;
+    const k=comboKey(combo);
+    if(!seen.has(k)){seen.add(k);candidates.push(combo)}
+  }
+
+  // Natural interpretation is always allowed. A heart-level card can simply
+  // be used as the actual level card rather than as a wildcard.
+  add(classifyFixed(cards));
+
+  const wildIndexes=[];
+  cards.forEach((c,i)=>{ if(isHeartLevelWildcard(c)) wildIndexes.push(i); });
+  if(!wildIndexes.length) return candidates;
+
+  const replacements=[];
+  for(const suit of SUITS){
+    for(const rank of RANKS){
+      replacements.push({rank,suit,joker:false});
+    }
+  }
+
+  const working=cards.map(c=>({...c}));
+
+  function recurse(wi){
+    if(wi===wildIndexes.length){
+      add(classifyFixed(working));
+      return;
+    }
+    const idx=wildIndexes[wi];
+    const original=cards[idx];
+
+    // Natural identity is included as one branch.
+    working[idx]={...original};
+    recurse(wi+1);
+
+    // Wildcard may represent any ordinary suited card, but never a joker.
+    for(const r of replacements){
+      working[idx]={
+        ...original,
+        rank:r.rank,
+        suit:r.suit,
+        joker:false,
+        wildcardFrom:original.id
+      };
+      recurse(wi+1);
+    }
+    working[idx]={...original};
+  }
+
+  recurse(0);
+  return candidates;
+}
+
+// Choose the interpretation that makes sense for the current trick.
+// Against a non-bomb, prefer matching its combination type before using a bomb.
+// Among valid choices, use the lowest sufficient value so a wildcard does not
+// unnecessarily turn a modest play into a stronger one.
+function classify(cards, target=null){
+  const candidates=classifyCandidates(cards);
+  if(!candidates.length) return null;
+
+  if(target){
+    const beating=candidates.filter(c=>beats(c,target));
+    if(!beating.length) return null;
+
+    const sameType=beating.filter(c=>!c.bomb && !target.bomb && c.type===target.type && c.size===target.size);
+    const pool=sameType.length ? sameType : beating;
+    return pool.sort((a,b)=>comboPriority(a)-comboPriority(b))[0];
+  }
+
+  return candidates.sort((a,b)=>comboPriority(b)-comboPriority(a))[0];
+}
+function bombStrength(p){
+  if(p.type==='jokerBomb') return 10000;
+  if(p.type==='bomb') return 1000 + p.size*100 + p.value;
+  if(p.type==='straightFlush') return 1450 + p.value; // > 4/5-card bombs, < 6-card bomb
+  return 0;
+}
+function beats(play, target){
+  if(!target) return true;
+  if(play.bomb){
+    if(!target.bomb) return true;
+    return bombStrength(play)>bombStrength(target);
+  }
+  if(target.bomb) return false;
+  return play.type===target.type && play.size===target.size && play.value>target.value;
+}
+
+function setupNameFields(containerId){
+  const el=document.getElementById(containerId); el.innerHTML='';
+  state.players.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.innerHTML=`<label>Player ${i+1} · Team ${p.team}<input id="${containerId}_${i}" maxlength="24" value="${escapeHtml(p.name)}"></label>`;
+    el.appendChild(d);
+  });
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+setupNameFields('startNames');
+
+function startGame(){
+  for(let i=0;i<4;i++){
+    const v=document.getElementById(`startNames_${i}`).value.trim();
+    state.players[i].name=v || `Player ${i+1}`;
+  }
+  state.started=true;
+  state.round=1;state.scoreA=0;state.scoreB=0;state.levelA=0;state.levelB=0;
+  dealRound();
+  closeOverlay('startOverlay');
+  showPassScreen(state.current, true);
+}
+function dealRound(){
+  const deck=shuffle(makeDeck());
+  state.players.forEach(p=>{p.hand=[];p.finished=false;p.place=null});
+  for(let i=0;i<deck.length;i++) state.players[i%4].hand.push(deck[i]);
+  state.players.forEach(p=>sortCards(p.hand));
+  state.current = state.round===1 ? secureRandomInt(4) : state.current;
+  state.tablePlay=null; state.lastPlayPlayer=null; state.passes=0; state.selected.clear();state.finishOrder=[];
+  render();
+}
+function render(){
+  document.getElementById('scoreA').textContent=state.scoreA;
+  document.getElementById('scoreB').textContent=state.scoreB;
+  document.getElementById('levelA').textContent=LEVELS[state.levelA];
+  document.getElementById('levelB').textContent=LEVELS[state.levelB];
+  document.getElementById('roundNo').textContent=state.round;
+  document.getElementById('levelCard').textContent=currentLevelRank();
+  renderPlayers();
+  renderTable();
+  renderHand();
+}
+function renderPlayers(){
+  const el=document.getElementById('playersPanel');el.innerHTML='';
+  state.players.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='player '+(i===state.current?'active ':'')+(p.finished?'finished':'');
+    d.innerHTML=`<div class="player-row"><div class="player-name">${escapeHtml(p.name)}</div><span class="badge">Team ${p.team}</span></div>
+      <div class="status">${p.finished?`Finished #${p.place}`:(p.hand.length<=10?`${p.hand.length} cards`:'Cards hidden')}${i===state.current&&!p.finished?' · TURN':''}</div>`;
+    el.appendChild(d);
+  });
+}
+function renderTable(){
+  const c=document.getElementById('tableCards');
+  if(!state.tablePlay){
+    document.getElementById('tableTitle').textContent='No cards on table';
+    c.innerHTML='';
+    document.getElementById('trickHint').textContent='Lead any supported combination.';
+  } else {
+    const p=state.players[state.lastPlayPlayer];
+    document.getElementById('tableTitle').textContent=`${p.name} played ${state.tablePlay.combo.label}`;
+    c.innerHTML=state.tablePlay.cards.map(x=>cardHtml(x,true)).join('');
+    document.getElementById('trickHint').textContent=`Beat ${state.tablePlay.combo.label} or play a stronger bomb.`;
+  }
+}
+function renderHand(){
+  const p=state.players[state.current];
+  document.getElementById('handTitle').textContent=`${p.name}'s hand`;
+  document.getElementById('handCount').textContent=p.hand.length<=10?p.hand.length:'Hidden';
+  document.getElementById('turnStatus').textContent=`Turn: ${p.name} · Team ${p.team}`;
+  const el=document.getElementById('hand');
+  if(state.reorderMode){
+    el.innerHTML=p.hand.map((c,i)=>`
+      <div class="card-slot">
+        ${cardHtml(c)}
+        <div class="reorder-controls">
+          <button class="movebtn" ${i===0?'disabled':''} onclick="event.stopPropagation();moveCard(${i},-1)">◀</button>
+          <button class="movebtn" ${i===p.hand.length-1?'disabled':''} onclick="event.stopPropagation();moveCard(${i},1)">▶</button>
+        </div>
+      </div>`).join('');
+    [...el.querySelectorAll('.card')].forEach(node=>{
+      const id=Number(node.dataset.id);
+      if(state.selected.has(id)) node.classList.add('selected');
+      node.onclick=()=>toggleCard(id);
+    });
+  } else {
+    el.innerHTML=p.hand.map(cardHtml).join('');
+    [...el.children].forEach(node=>{
+      const id=Number(node.dataset.id);
+      if(state.selected.has(id)) node.classList.add('selected');
+      node.onclick=()=>toggleCard(id);
+    });
+  }
+  document.getElementById('reorderBtn').textContent=state.reorderMode?'Done Reordering':'Reorder Cards';
+  document.getElementById('passBtn').disabled=!state.tablePlay;
+  updateSelectionHint();
+}
+function toggleCard(id){
+  if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+  renderHand();
+}
+function selectedCards(){return state.players[state.current].hand.filter(c=>state.selected.has(c.id))}
+function updateSelectionHint(){
+  const cards=selectedCards(), hint=document.getElementById('selectionHint');
+  if(!cards.length){hint.textContent='Select cards to play.';hint.className='hint';return}
+  const target=state.tablePlay?.combo || null;
+  const combo=classify(cards,target);
+  if(!combo){hint.textContent=`${cards.length} selected · not a supported combination or cannot beat the table`;hint.className='hint bad';return}
+  const ok=true;
+  hint.textContent=`${combo.label}${ok?' · valid play':' · does not beat the table'}`;
+  hint.className='hint '+(ok?'good':'bad');
+}
+function playSelected(){
+  const cards=selectedCards();
+  if(!cards.length)return flashHint('Select at least one card.',false);
+
+  const combo=classify(cards,state.tablePlay?.combo || null);
+  if(!combo)return flashHint('Those cards are not a supported combination, or they do not beat the current table play.',false);
+
+  // Save a snapshot so nothing changes until the player confirms.
+  state.pendingPlay={
+    playerIndex:state.current,
+    cardIds:cards.map(c=>c.id),
+    cards:[...cards],
+    combo:{...combo}
+  };
+
+  document.getElementById('confirmPlayTitle').textContent=`${state.players[state.current].name}, play these cards?`;
+  document.getElementById('confirmPlayCombo').innerHTML=
+    `<b>${combo.label}</b>${combo.bomb?' · Bomb':''}`;
+  document.getElementById('confirmPlayCards').innerHTML=
+    cards.map(c=>cardHtml(c,true)).join('');
+  document.getElementById('confirmPlayOverlay').classList.add('show');
+}
+
+function cancelSelectedPlay(){
+  state.pendingPlay=null;
+  closeOverlay('confirmPlayOverlay');
+}
+
+function confirmSelectedPlay(){
+  const pending=state.pendingPlay;
+  if(!pending) return closeOverlay('confirmPlayOverlay');
+
+  // Guard against any unexpected state change.
+  if(pending.playerIndex!==state.current){
+    state.pendingPlay=null;
+    closeOverlay('confirmPlayOverlay');
+    return flashHint('Turn changed. Please select your cards again.',false);
+  }
+
+  const p=state.players[state.current];
+  const ids=new Set(pending.cardIds);
+  const stillPresent=pending.cardIds.every(id=>p.hand.some(c=>c.id===id));
+  if(!stillPresent){
+    state.pendingPlay=null;
+    closeOverlay('confirmPlayOverlay');
+    return flashHint('Your hand changed. Please select your cards again.',false);
+  }
+
+  const cards=p.hand.filter(c=>ids.has(c.id));
+  const combo=classify(cards,state.tablePlay?.combo || null);
+  if(!combo){
+    state.pendingPlay=null;
+    closeOverlay('confirmPlayOverlay');
+    return flashHint('This play is no longer valid. Please choose again.',false);
+  }
+
+  closeOverlay('confirmPlayOverlay');
+
+  p.hand=p.hand.filter(c=>!ids.has(c.id));
+  state.tablePlay={cards:[...cards],combo};
+  state.lastPlayPlayer=state.current;
+  state.passes=0;
+  state.selected.clear();
+  state.pendingPlay=null;
+
+  if(p.hand.length===0 && !p.finished){
+    p.finished=true;
+    p.place=state.finishOrder.length+1;
+    state.finishOrder.push(state.current);
+  }
+
+  if(state.finishOrder.length>=3){
+    finishRound();
+    return;
+  }
+
+  advanceTurn();
+}
+
+function passTurn(){
+  if(!state.tablePlay)return flashHint('You cannot pass when leading a new trick.',false);
+  state.pendingPass=true;
+  document.getElementById('confirmPassOverlay').classList.add('show');
+}
+
+function cancelPassTurn(){
+  state.pendingPass=false;
+  closeOverlay('confirmPassOverlay');
+}
+
+function confirmPassTurn(){
+  if(!state.pendingPass)return closeOverlay('confirmPassOverlay');
+  state.pendingPass=false;
+  closeOverlay('confirmPassOverlay');
+
+  state.selected.clear();
+  state.passes++;
+
+  const activeCount=state.players.filter(p=>!p.finished).length;
+
+  if(state.passes>=Math.max(1,activeCount-1)){
+    let leader=state.lastPlayPlayer;
+    state.tablePlay=null;
+    state.passes=0;
+
+    // Guandan partner-lead rule:
+    // if the player who won the trick has already gone out, their teammate
+    // leads the next trick if that teammate is still active.
+    if(state.players[leader].finished){
+      const teammate=(leader+2)%4;
+      leader=!state.players[teammate].finished ? teammate : nextActive(leader);
+    }
+
+    state.current=leader;
+    state.reorderMode=false;
+    render();
+    showPassScreen(state.current);
+    return;
+  }
+
+  advanceTurn();
+}
+function nextActive(from){
+  for(let step=1;step<=4;step++){
+    const i=(from+step)%4;
+    if(!state.players[i].finished)return i;
+  }
+  return from;
+}
+function advanceTurn(){
+  state.reorderMode=false;
+  state.current=nextActive(state.current);
+  render();
+  showPassScreen(state.current);
+}
+function showPassScreen(index, first=false){
+  // Privacy first: hide the entire underlying game before showing the pass screen.
+  document.body.classList.add('privacy-mode');
+  document.getElementById('passToName').textContent=state.players[index].name;
+  document.getElementById('passOverlay').classList.add('show');
+}
+function revealNext(){
+  closeOverlay('passOverlay');
+  document.body.classList.remove('privacy-mode');
+  render();
+}
+function sortHand(){
+  sortCards(state.players[state.current].hand);
+  renderHand();
+}
+function toggleReorderMode(){
+  state.reorderMode=!state.reorderMode;
+  renderHand();
+}
+function moveCard(index,delta){
+  const hand=state.players[state.current].hand;
+  const j=index+delta;
+  if(j<0 || j>=hand.length)return;
+  [hand[index],hand[j]]=[hand[j],hand[index]];
+  renderHand();
+}
+function flashHint(msg,good){
+  const h=document.getElementById('selectionHint');h.textContent=msg;h.className='hint '+(good?'good':'bad');
+}
+
+function highestTributeCards(hand){
+  // Standard playable interpretation for this edition:
+  // tribute the highest natural card held. Jokers are highest.
+  // If tied, either copy may be chosen.
+  let max=Math.max(...hand.map(baseRankValue));
+  return hand.filter(c=>baseRankValue(c)===max);
+}
+
+function isReturnTributeEligible(card){
+  // Common Guandan return-tribute convention used here:
+  // return any non-joker card whose natural rank is 10 or below.
+  // If none exists, any non-joker card is allowed; if still none, any card.
+  if(card.joker) return false;
+  return naturalValue(card)<=10;
+}
+
+function getReturnCandidates(hand){
+  let eligible=hand.filter(isReturnTributeEligible);
+  if(!eligible.length) eligible=hand.filter(c=>!c.joker);
+  if(!eligible.length) eligible=[...hand];
+  return eligible;
+}
+
+function buildTributeQueue(){
+  const order=state.finishOrder;
+  if(order.length!==4) return [];
+
+  const first=order[0], second=order[1], third=order[2], fourth=order[3];
+  const partner=(first+2)%4;
+  const partnerPlace=state.players[partner].place;
+
+  // 1-2: double tribute.
+  if(partnerPlace===2){
+    return [
+      {kind:'tribute', from:fourth, to:first},
+      {kind:'tribute', from:third, to:second}
+    ];
+  }
+
+  // 1-3: one tribute. Fourth place pays first place.
+  if(partnerPlace===3){
+    return [
+      {kind:'tribute', from:fourth, to:first}
+    ];
+  }
+
+  // 1-4: no tribute.
+  return [];
+}
+
+function beginTributePhase(){
+  state.tributeQueue=buildTributeQueue();
+  state.tributeIndex=0;
+  state.tributeContext=null;
+  state.tributeRecords=[];
+
+  if(!state.tributeQueue.length){
+    // 1-4 result: no tribute, and previous first place opens.
+    state.current=state.finishOrder[0];
+    startNextRoundAfterTribute();
+    return;
+  }
+
+  showNextTributeStep();
+}
+
+function showNextTributeStep(){
+  if(state.tributeIndex>=state.tributeQueue.length){
+    startNextRoundAfterTribute();
+    return;
+  }
+
+  const step=state.tributeQueue[state.tributeIndex];
+  state.tributeContext={...step, selectedId:null, transferredCard:null};
+
+  document.body.classList.add('privacy-mode');
+  document.getElementById('tributeOverlay').classList.add('show');
+  document.getElementById('tributeStepLabel').textContent='PASS THE DEVICE';
+  document.getElementById('tributeTitle').textContent=state.players[step.from].name;
+  document.getElementById('tributeInstruction').innerHTML=
+    `A required tribute card will be transferred automatically to <b>${escapeHtml(state.players[step.to].name)}</b>. You cannot manually choose a high card to give.<br><br>Tap below when you have the device.`;
+  document.getElementById('tributeHand').innerHTML='';
+  document.getElementById('tributeHint').textContent='';
+  const btn=document.getElementById('tributeConfirmBtn');
+  btn.textContent='I am ready — process tribute';
+  btn.onclick=revealTributeChoices;
+}
+
+function revealTributeChoices(){
+  document.body.classList.remove('privacy-mode');
+
+  const ctx=state.tributeContext;
+  const from=state.players[ctx.from];
+  const to=state.players[ctx.to];
+  const choices=highestTributeCards(from.hand);
+
+  // The tributary does not manually choose a high card. This prevents
+  // intentionally giving/exposing a chosen high card: the required highest
+  // tribute card is transferred automatically.
+  const card=choices[0];
+  const idx=from.hand.findIndex(c=>c.id===card.id);
+  from.hand.splice(idx,1);
+  to.hand.push(card);
+  sortCards(to.hand);
+  ctx.transferredCard=card;
+  ctx.kind='return';
+  ctx.selectedId=null;
+
+  state.tributeRecords.push({
+    from:ctx.from,
+    to:ctx.to,
+    card:{...card},
+    rankValue:baseRankValue(card)
+  });
+
+  document.getElementById('tributeStepLabel').textContent='TRIBUTE SENT';
+  document.getElementById('tributeTitle').textContent=`${from.name} → ${to.name}`;
+  document.getElementById('tributeInstruction').innerHTML=
+    `The required tribute card was transferred automatically.<br><br>Pass the device to <b>${escapeHtml(to.name)}</b> to choose the return card.`;
+  document.getElementById('tributeHand').innerHTML='';
+  document.getElementById('tributeHint').textContent='The tributary cannot manually choose a different high card.';
+
+  document.body.classList.add('privacy-mode');
+  const btn=document.getElementById('tributeConfirmBtn');
+  btn.textContent='Pass device to recipient';
+  btn.onclick=showReturnTributePassScreen;
+}
+
+function showReturnTributePassScreen(){
+  const ctx=state.tributeContext;
+  const to=state.players[ctx.to];
+  document.body.classList.add('privacy-mode');
+  document.getElementById('tributeStepLabel').textContent='PASS THE DEVICE';
+  document.getElementById('tributeTitle').textContent=to.name;
+  document.getElementById('tributeInstruction').textContent='Tap below only when the recipient has the device.';
+  document.getElementById('tributeHand').innerHTML='';
+  document.getElementById('tributeHint').textContent='';
+  const btn=document.getElementById('tributeConfirmBtn');
+  btn.textContent='I am ready — choose return card';
+  btn.onclick=revealReturnTributeChoices;
+}
+
+function confirmTributeSelection(){
+  revealTributeChoices();
+}
+
+function revealReturnTributeChoices(){
+  document.body.classList.remove('privacy-mode');
+  const ctx=state.tributeContext;
+  const from=state.players[ctx.from], to=state.players[ctx.to];
+  const choices=getReturnCandidates(to.hand);
+
+  ctx.selectedId=null;
+  document.getElementById('tributeStepLabel').textContent='RETURN TRIBUTE';
+  document.getElementById('tributeTitle').textContent=`${to.name} → ${from.name}`;
+  document.getElementById('tributeInstruction').textContent=
+    'Choose a return card. This edition requires rank 10 or below when available.';
+  const handEl=document.getElementById('tributeHand');
+  handEl.innerHTML=choices.map(cardHtml).join('');
+  [...handEl.children].forEach(node=>{
+    node.onclick=()=>{
+      ctx.selectedId=Number(node.dataset.id);
+      [...handEl.children].forEach(n=>n.classList.toggle('selected',Number(n.dataset.id)===ctx.selectedId));
+      document.getElementById('tributeHint').textContent='Selected. Confirm to return this card.';
+      document.getElementById('tributeHint').className='hint good';
+    };
+  });
+  const btn=document.getElementById('tributeConfirmBtn');
+  btn.textContent='Confirm Return';
+  btn.onclick=confirmReturnTribute;
+}
+
+function confirmReturnTribute(){
+  const ctx=state.tributeContext;
+  if(!ctx || ctx.selectedId===null){
+    const h=document.getElementById('tributeHint');
+    h.textContent='Select a return card first.';
+    h.className='hint bad';
+    return;
+  }
+
+  const from=state.players[ctx.from], to=state.players[ctx.to];
+  const idx=to.hand.findIndex(c=>c.id===ctx.selectedId);
+  if(idx<0) return;
+
+  const [card]=to.hand.splice(idx,1);
+  from.hand.push(card);
+  sortCards(from.hand);
+  sortCards(to.hand);
+
+  state.tributeIndex++;
+  showNextTributeStep();
+}
+
+function skipTribute(){}
+
+function determineOpeningLeaderAfterTribute(){
+  const order=state.finishOrder;
+  if(order.length!==4) return state.current;
+
+  const first=order[0];
+  const partner=(first+2)%4;
+  const partnerPlace=state.players[partner].place;
+
+  // 1-4: no tribute. Previous first-place player leads.
+  if(partnerPlace===4){
+    return first;
+  }
+
+  // 1-3: the one tribute payer leads.
+  if(partnerPlace===3){
+    return state.tributeRecords.length ? state.tributeRecords[0].from : first;
+  }
+
+  // 1-2: payer of the higher tribute leads.
+  // Equal tribute ranks: randomly choose one of the two tribute payers.
+  if(partnerPlace===2 && state.tributeRecords.length>=2){
+    const a=state.tributeRecords[0];
+    const b=state.tributeRecords[1];
+
+    if(a.rankValue>b.rankValue) return a.from;
+    if(b.rankValue>a.rankValue) return b.from;
+
+    return secureRandomInt(2)===0 ? a.from : b.from;
+  }
+
+  return first;
+}
+
+function startNextRoundAfterTribute(){
+  closeOverlay('tributeOverlay');
+  document.body.classList.remove('privacy-mode');
+
+  state.current=determineOpeningLeaderAfterTribute();
+  state.tablePlay=null;
+  state.lastPlayPlayer=null;
+  state.passes=0;
+  state.selected.clear();
+  state.pendingPlay=null;
+  state.reorderMode=false;
+
+  render();
+  showPassScreen(state.current,true);
+}
+
+function finishRound(){
+  const remaining=state.players.findIndex(p=>!p.finished);
+  if(remaining>=0){state.players[remaining].finished=true;state.players[remaining].place=4;state.finishOrder.push(remaining)}
+  const first=state.players[state.finishOrder[0]];
+  const partnerIndex=(state.finishOrder[0]+2)%4;
+  const partnerPlace=state.players[partnerIndex].place;
+  const gain=partnerPlace===2?3:partnerPlace===3?2:1; // 1st + 2nd advances exactly 3, not 4
+  if(first.team==='A'){state.scoreA+=gain;state.levelA=Math.min(12,state.levelA+gain)}
+  else {state.scoreB+=gain;state.levelB=Math.min(12,state.levelB+gain)}
+  render();
+  const order=state.finishOrder.map((idx,i)=>`${i+1}. ${state.players[idx].name}`).join('<br>');
+  const winner=first.team;
+  const modal=document.getElementById('passOverlay');
+  document.getElementById('passToName').innerHTML=`Team ${winner} wins the round`;
+  modal.querySelector('p').innerHTML=`Finish order:<br><br><b>${order}</b><br><br>Team ${winner} gains <b>${gain}</b> level point${gain>1?'s':''}.`;
+  const b=modal.querySelector('button');
+  b.textContent='Start Next Round';
+  b.onclick=()=>{ 
+    b.textContent='I am ready — show my hand'; b.onclick=revealNext;
+    modal.querySelector('p').textContent="The previous player's hand is hidden. Give the device to the named player, then tap below when ready.";
+
+    // Preserve the previous finish order long enough to determine tribute,
+    // then deal the next round before tribute cards are exchanged.
+    const previousFinishOrder=[...state.finishOrder];
+    state.previousFinishOrder=[...previousFinishOrder];
+    state.round++;
+
+    const deck=shuffle(makeDeck());
+    state.players.forEach(p=>{p.hand=[];p.finished=false;p.place=null});
+    for(let i=0;i<deck.length;i++) state.players[i%4].hand.push(deck[i]);
+    state.players.forEach(p=>sortCards(p.hand));
+
+    state.finishOrder=previousFinishOrder;
+    state.current=previousFinishOrder[0];
+    state.tablePlay=null; state.lastPlayPlayer=null; state.passes=0; state.selected.clear();
+
+    closeOverlay('passOverlay');
+    document.body.classList.remove('privacy-mode');
+    beginTributePhase();
+  };
+  modal.classList.add('show');
+}
+function openNames(){setupNameFields('nameInputs');document.getElementById('namesOverlay').classList.add('show')}
+function saveNames(){
+  for(let i=0;i<4;i++){const v=document.getElementById(`nameInputs_${i}`).value.trim();state.players[i].name=v||`Player ${i+1}`}
+  closeOverlay('namesOverlay');render();
+}
+function openRules(){document.getElementById('rulesOverlay').classList.add('show')}
+function closeOverlay(id){document.getElementById(id).classList.remove('show')}
+
+function beginEndVote(){
+  if(!state.started)return;
+  state.endVotes=[];state.voteIndex=0;
+  document.getElementById('voteOverlay').classList.add('show');
+  renderVoteTurn();
+}
+function renderVoteTurn(){
+  const area=document.getElementById('voteArea');
+  if(state.voteIndex>=4){
+    const all=state.endVotes.every(Boolean);
+    if(all){
+      area.innerHTML=`<div class="good" style="font-size:20px;font-weight:900;margin:18px">All four players agreed.</div>
+      <p>Final score: Team A ${state.scoreA} · Team B ${state.scoreB}</p>
+      <button class="btn danger" style="width:100%" onclick="finishGame()">End Game Now</button>`;
+    } else {
+      area.innerHTML=`<div class="bad" style="font-size:20px;font-weight:900;margin:18px">Vote failed.</div>
+      <p>The game continues because unanimous agreement was not reached.</p>
+      <button class="btn primary" style="width:100%" onclick="closeOverlay('voteOverlay')">Continue Game</button>`;
+    }
+    return;
+  }
+  const p=state.players[state.voteIndex];
+  area.innerHTML=`<div class="sub">PASS THE DEVICE TO</div><h3>${escapeHtml(p.name)}</h3>
+    <p>Do you agree to end the game?</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn danger" style="flex:1" onclick="castVote(true)">Yes, end game</button>
+      <button class="btn" style="flex:1" onclick="castVote(false)">No, continue</button>
+    </div>`;
+}
+function castVote(v){
+  state.endVotes.push(v);state.voteIndex++;
+  if(state.voteIndex<4){
+    const area=document.getElementById('voteArea');
+    area.innerHTML=`<p>Vote recorded privately.</p><button class="btn primary" style="width:100%" onclick="renderVoteTurn()">Pass to next voter</button>`;
+  } else renderVoteTurn();
+}
+function finishGame(){
+  const winner=state.scoreA===state.scoreB?'Tie':state.scoreA>state.scoreB?'Team A':'Team B';
+  const area=document.getElementById('voteArea');
+  area.innerHTML=`<div class="gold" style="font-size:28px;font-weight:900;margin:14px">Game Ended</div>
+    <p><b>${winner==='Tie'?'The match is tied.':winner+' wins!'}</b></p>
+    <p>Final score — Team A: ${state.scoreA} · Team B: ${state.scoreB}</p>
+    <button class="btn primary" style="width:100%" onclick="location.reload()">Start a New Game</button>`;
+}
+</script>
+</body>
+</html>
